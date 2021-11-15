@@ -32,7 +32,6 @@ VOID CALLBACK myTimerProc1(
 	UINT idEvent, // timer identifier
 	DWORD dwTime // current system time
 	) {
-	//MessageBox(NULL, TEXT("Timer test1"), TEXT("timer test1"), MB_ICONEXCLAMATION | MB_OK);
 	//TODO:
 	HSTREAM str;
 	TCHAR file[MAX_PATH] = { 0 };
@@ -40,9 +39,8 @@ VOID CALLBACK myTimerProc1(
 	GetShortPathName(file, file, 50);
 	str = BASS_StreamCreateFile(FALSE, file, 0, 0, 0);
 	if (!BASS_ChannelPlay(str, FALSE)) // play the stream (continue from current position)
-		MessageBox(NULL, TEXT("ERROR"), TEXT("CAN��T PLAY STREAM"), MB_ICONEXCLAMATION | MB_OK);
+		MessageBox(NULL, TEXT("ERROR"), TEXT("CAN‘T PLAY STREAM"), MB_ICONEXCLAMATION | MB_OK);
 
-	//MessageBox(NULL, TEXT("Never gonna give you up"), TEXT("never gonna let you down"), MB_ICONEXCLAMATION | MB_OK);
 	KillTimer(NULL, TimerId);
 }
 
@@ -57,10 +55,10 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 		{
 		case WM_MOUSEMOVE:
 		{
-							 if (TimerId != NULL)KillTimer(NULL, TimerId);
-							 TimerId = SetTimer(NULL, 0, 1800000, myTimerProc1);				 // do something
-
-							 break;
+			//鼠标移动重置计时器
+			if (TimerId != NULL)KillTimer(NULL, TimerId);
+			TimerId = SetTimer(NULL, 0, 180000, myTimerProc1);	//间隔时间修改SetTimer的参数
+			break;
 		}
 		default:
 			break;
@@ -103,7 +101,7 @@ VOID ToTray(HWND hwnd)
 	lstrcpy(nid.szTip, _T("PRTS-TIMER"));
 	nid.uCallbackMessage = WM_SHOWTASK;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-	Shell_NotifyIcon(NIM_ADD, &nid);//������������ͼ��
+	Shell_NotifyIcon(NIM_ADD, &nid);//在托盘区添加图标
 
 }
 void DeleteTray(HWND hwnd)
@@ -126,94 +124,89 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
 
 		/* Upon destruction, tell the main thread to stop */
 	case WM_DESTROY: {
-						 PostQuitMessage(0);
-						 StopHookMouse();
-						 DeleteTray(hwnd);
-						 DestroyWindow(hwnd);
-						 KillTimer(NULL, TimerId);
-						 break;
+				PostQuitMessage(0);
+				StopHookMouse();
+				DeleteTray(hwnd);
+				DestroyWindow(hwnd);
+				KillTimer(NULL, TimerId);
+				break;
 	}
 	case WM_CLOSE: {
 
-					   break;
+				break;
 	}
 	case WM_CREATE:{
-					   hwndbutton = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("BUTTON"),
-						   TEXT("choose"),
-						   WS_CHILD | WS_VISIBLE,
-						   30, 30, 80, 30,
-						   hwnd, (HMENU)IDB_ONE,
-						   ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+				//遗留按钮，不用管
+				hwndbutton = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("BUTTON"),
+				TEXT("choose"),
+				WS_CHILD | WS_VISIBLE,
+				30, 30, 80, 30,
+				hwnd, (HMENU)IDB_ONE,
+				((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-					   ofn.lStructSize = sizeof(OPENFILENAME);
-					   ofn.hwndOwner = NULL;
-					   ofn.lpstrInitialDir = NULL;
-					   ofn.nFilterIndex = 1;
-					   ofn.lpstrTitle = TEXT("choose a file");
-					   ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-
-
-					   break;
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = NULL;
+				ofn.lpstrInitialDir = NULL;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrTitle = TEXT("choose a file");
+				ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+				break;
 	}
 	case WM_SIZE:{
-					 if (wParam == SIZE_MINIMIZED)
-					 {
-						 ToTray(hwnd);
-						 ShowWindow(hwnd, SW_HIDE);
-					 }
-					 break;
+				if (wParam == SIZE_MINIMIZED)
+				{
+					ToTray(hwnd);
+					ShowWindow(hwnd, SW_HIDE);
+				}
+				break;
 	}
 	case WM_SHOWTASK:{
-						 if (lParam == WM_LBUTTONDOWN)
-						 {
-							 SetForegroundWindow(hwnd);
-							 ShowWindow(hwnd, SW_SHOWNORMAL);
-						 }
-						 if (lParam == WM_RBUTTONDOWN)
-						 {
-							 POINT pt;
-							 GetCursorPos(&pt);
-							 HMENU hMenu = CreatePopupMenu();
-							 AppendMenu(hMenu, MF_STRING, IDM_SEC, TEXT("�˳�"));
-							 SetForegroundWindow(hwnd);
-							 int cmd = TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, NULL, hwnd, NULL);
-							 switch (cmd)
-							 {
-							 case IDM_SEC:
-							 {
-											 //MessageBox(NULL, TEXT("TESTING"), TEXT("test"), MB_ICONEXCLAMATION | MB_OK);
-											 SendMessage(hwnd, WM_DESTROY, 0, 0);
-											 break;
-							 }
-							 }
+				if (lParam == WM_LBUTTONDOWN)
+				{
+					SetForegroundWindow(hwnd);
+					ShowWindow(hwnd, SW_SHOWNORMAL);
+				}
+				if (lParam == WM_RBUTTONDOWN)
+				{
+					POINT pt;
+					GetCursorPos(&pt);
+					HMENU hMenu = CreatePopupMenu();
+					AppendMenu(hMenu, MF_STRING, IDM_SEC, TEXT("退出"));
+					SetForegroundWindow(hwnd);
+					int cmd = TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, NULL, hwnd, NULL);
+					switch (cmd)
+						{
+						case IDM_SEC:
+							{
+							SendMessage(hwnd, WM_DESTROY, 0, 0);
+							break;
+							}
+						}
 
-						 }
+			}
 						 break;
 	}
 	case WM_COMMAND:{
 
-						switch (LOWORD(wParam)){
+			switch (LOWORD(wParam)){
 
-						case IDB_ONE:
+				case IDB_ONE:
+					{
+						HSTREAM str;
+						TCHAR file[MAX_PATH] = { 0 };
+						ofn.lpstrFilter = TEXT("Streamable files (wav/aif/mp3/mp2/mp1/ogg)\0*.wav;*.aif;*.mp3;*.mp2;*.mp1;*.ogg\0All files\0*.*\0\0");
+						ofn.lpstrFile = file;
+						ofn.nMaxFile = sizeof(file);
+
+						if (GetOpenFileName(&ofn))
 						{
-										HSTREAM str;
-										TCHAR file[MAX_PATH] = { 0 };
-										ofn.lpstrFilter = TEXT("Streamable files (wav/aif/mp3/mp2/mp1/ogg)\0*.wav;*.aif;*.mp3;*.mp2;*.mp1;*.ogg\0All files\0*.*\0\0");
-										ofn.lpstrFile = file;
-										ofn.nMaxFile = sizeof(file);
-
-										if (GetOpenFileName(&ofn))
-										{
-											str = BASS_StreamCreateFile(FALSE, file, 0, 0, 0);
-											if (!BASS_ChannelPlay(str, FALSE)) // play the stream (continue from current position)
-												MessageBox(NULL, TEXT("ERROR"), TEXT("CAN��T PLAY STREAM"), MB_ICONEXCLAMATION | MB_OK);
-
-											//MessageBox(NULL, file, TEXT("choosed file:"), 0);
-										}
-										break;
+						str = BASS_StreamCreateFile(FALSE, file, 0, 0, 0);
+							if (!BASS_ChannelPlay(str, FALSE)) // play the stream (continue from current position)
+								MessageBox(NULL, TEXT("ERROR"), TEXT("CAN‘T PLAY STREAM"), MB_ICONEXCLAMATION | MB_OK);
 						}
-
-						}
+							break;
+					}
+				}
 						break;
 
 						/* All other messages (a lot of them) are processed using default procedures */
